@@ -9,6 +9,7 @@ import { ArrowLeft, Car, Phone, MapPin, Clock, User } from 'lucide-react'
 import { VehicleActions } from '@/components/vehicle-actions'
 import { PhotoUpload } from '@/components/photo-upload'
 import { ServiceChecklist } from '@/components/service-checklist'
+import { DueDateEditor } from '@/components/due-date-editor'
 import type { Profile } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -121,6 +122,13 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
                 <p className="text-gray-500 flex items-center gap-1"><Clock className="h-3 w-3" />Дата поступления</p>
                 <p className="font-medium">{new Date(vehicle.created_at).toLocaleDateString('ru-RU')}</p>
               </div>
+            </div>
+            <div className="mt-3">
+              <DueDateEditor
+                vehicleId={vehicle.id}
+                dueDate={vehicle.due_date ?? null}
+                canEdit={profile?.role === 'admin' || profile?.role === 'manager'}
+              />
             </div>
             {vehicle.notes && (
               <>
