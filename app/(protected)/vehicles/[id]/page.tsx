@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { ArrowLeft, Car, Phone, MapPin, Clock, User } from 'lucide-react'
 import { VehicleActions } from '@/components/vehicle-actions'
 import { PhotoUpload } from '@/components/photo-upload'
+import { ServiceChecklist } from '@/components/service-checklist'
 import type { Profile } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -49,6 +50,17 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
   const { data: stations } = await supabase
     .from('stations')
     .select('*, stage:stages(name)')
+    .order('order_index')
+
+  const { data: vehicleServices } = await supabase
+    .from('vehicle_services')
+    .select('*, service:services(id, name, order_index)')
+    .eq('vehicle_id', id)
+    .order('created_at')
+
+  const { data: allServices } = await supabase
+    .from('services')
+    .select('*')
     .order('order_index')
 
   const s = statusLabel[vehicle.status] || statusLabel.active
@@ -130,6 +142,14 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
             profile={profile as Profile}
           />
         )}
+
+        {/* Services checklist */}
+        <ServiceChecklist
+          vehicleId={vehicle.id}
+          vehicleServices={vehicleServices || []}
+          allServices={allServices || []}
+          profile={profile as Profile}
+        />
 
         {/* Photos */}
         <PhotoUpload

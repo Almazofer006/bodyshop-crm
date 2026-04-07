@@ -59,3 +59,22 @@ export interface VehiclePhoto {
   uploaded_at: string
   uploaded_by: string
 }
+
+export interface Service {
+  id: number
+  name: string
+  order_index: number
+}
+
+export interface VehicleService {
+  id: string
+  vehicle_id: string
+  service_id: number | null
+  custom_name: string | null
+  completed: boolean
+  completed_at: string | null
+  completed_by: string | null
+  created_at: string
+  service?: Service
+  completer?: Profile
+}
