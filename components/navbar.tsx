@@ -10,7 +10,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Car, LayoutDashboard, Users, LogOut, PlusCircle, Menu, X } from 'lucide-react'
+import { Car, LayoutDashboard, Users, LogOut, PlusCircle, Menu, X, BarChart2 } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
 interface NavbarProps { profile: Profile }
@@ -40,6 +40,7 @@ export function Navbar({ profile }: NavbarProps) {
   const navLinks = [
     { href: '/dashboard', label: 'Доска', icon: LayoutDashboard, show: true },
     { href: '/vehicles', label: 'Автомобили', icon: Car, show: profile.role === 'admin' || profile.role === 'manager' },
+    { href: '/stats', label: 'Статистика', icon: BarChart2, show: profile.role === 'admin' || profile.role === 'manager' },
     { href: '/admin/users', label: 'Пользователи', icon: Users, show: profile.role === 'admin' },
   ].filter(l => l.show)
 
