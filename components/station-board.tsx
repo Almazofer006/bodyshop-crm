@@ -18,27 +18,27 @@ import { toast } from 'sonner'
 import type { Stage, Profile, Vehicle, Station } from '@/lib/types'
 
 const STAGE_COLORS: Record<string, string> = {
-  'Парковка': 'bg-gray-100 border-gray-300',
-  'Жестяные работы': 'bg-orange-50 border-orange-300',
-  'Арматурные работы': 'bg-yellow-50 border-yellow-300',
-  'Зона подготовки': 'bg-blue-50 border-blue-300',
-  'Зона ПДР': 'bg-purple-50 border-purple-300',
-  'Зона Покраска': 'bg-red-50 border-red-300',
-  'Зона Детейлинга': 'bg-green-50 border-green-300',
-  'Зона Мойки': 'bg-cyan-50 border-cyan-300',
-  'Зона Бронепленки': 'bg-indigo-50 border-indigo-300',
+  'Парковка': 'bg-white border-gray-200',
+  'Жестяные работы': 'bg-white border-gray-200',
+  'Арматурные работы': 'bg-white border-gray-200',
+  'Зона подготовки': 'bg-white border-gray-200',
+  'Зона ПДР': 'bg-white border-gray-200',
+  'Зона Покраска': 'bg-white border-gray-200',
+  'Зона Детейлинга': 'bg-white border-gray-200',
+  'Зона Мойки': 'bg-white border-gray-200',
+  'Зона Бронепленки': 'bg-white border-gray-200',
 }
 
 const STAGE_HEADER_COLORS: Record<string, string> = {
-  'Парковка': 'bg-gray-200 text-gray-800',
-  'Жестяные работы': 'bg-orange-200 text-orange-900',
-  'Арматурные работы': 'bg-yellow-200 text-yellow-900',
-  'Зона подготовки': 'bg-blue-200 text-blue-900',
-  'Зона ПДР': 'bg-purple-200 text-purple-900',
-  'Зона Покраска': 'bg-red-200 text-red-900',
-  'Зона Детейлинга': 'bg-green-200 text-green-900',
-  'Зона Мойки': 'bg-cyan-200 text-cyan-900',
-  'Зона Бронепленки': 'bg-indigo-200 text-indigo-900',
+  'Парковка': 'bg-gray-950 text-white',
+  'Жестяные работы': 'bg-gray-950 text-white',
+  'Арматурные работы': 'bg-gray-950 text-white',
+  'Зона подготовки': 'bg-gray-950 text-white',
+  'Зона ПДР': 'bg-gray-950 text-white',
+  'Зона Покраска': 'bg-gray-950 text-white',
+  'Зона Детейлинга': 'bg-gray-950 text-white',
+  'Зона Мойки': 'bg-gray-950 text-white',
+  'Зона Бронепленки': 'bg-gray-950 text-white',
 }
 
 interface StationBoardProps {

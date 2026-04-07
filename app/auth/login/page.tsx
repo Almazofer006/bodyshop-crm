@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Car } from 'lucide-react'
 
 export default function LoginPage() {
@@ -34,21 +33,42 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-full">
-              <Car className="h-8 w-8 text-white" />
+    <div className="min-h-screen flex bg-gray-950">
+      {/* Left panel */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-blue-600 p-12">
+        <Car className="h-20 w-20 text-white mb-6" />
+        <h1 className="text-4xl font-bold text-white text-center leading-tight">
+          Кузовной центр
+        </h1>
+        <p className="text-blue-100 text-lg mt-4 text-center">
+          Система управления ремонтом автомобилей
+        </p>
+        <div className="mt-12 grid grid-cols-2 gap-4 w-full max-w-sm">
+          {['Контроль', 'Учёт', 'История', 'Аналитика'].map((item) => (
+            <div key={item} className="bg-blue-500/40 rounded-xl p-4 text-center">
+              <p className="text-white font-semibold">{item}</p>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right panel - Login form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-3 mb-8 lg:hidden">
+            <div className="bg-blue-600 p-2 rounded-lg">
+              <Car className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-white font-bold text-xl">Кузовной центр CRM</span>
           </div>
-          <CardTitle className="text-2xl">Кузовной центр CRM</CardTitle>
-          <CardDescription>Войдите в систему</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+
+          <h2 className="text-3xl font-bold text-white mb-2">Добро пожаловать</h2>
+          <p className="text-gray-400 mb-8">Войдите в систему</p>
+
+          <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -56,10 +76,11 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus:border-blue-500 h-12"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Пароль</Label>
+              <Label htmlFor="password" className="text-gray-300">Пароль</Label>
               <Input
                 id="password"
                 type="password"
@@ -67,17 +88,24 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus:border-blue-500 h-12"
               />
             </div>
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded">{error}</p>
+              <p className="text-sm text-red-400 bg-red-900/30 border border-red-800 px-4 py-3 rounded-lg">
+                {error}
+              </p>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base"
+              disabled={loading}
+            >
               {loading ? 'Вход...' : 'Войти'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
