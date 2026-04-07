@@ -24,7 +24,7 @@ export default async function DashboardPage() {
       stations (
         *,
         vehicles (
-          id, plate, make, model, owner_name, status, created_at, current_station_id
+          id, plate, make, model, owner_name, status, created_at, current_station_id, due_date
         )
       )
     `)

@@ -65,7 +65,7 @@ export function StationBoard({ stages: initialStages, profile }: StationBoardPro
     const supabase = createClient()
     const { data } = await supabase
       .from('stages')
-      .select('*, stations (*, vehicles (id, plate, make, model, owner_name, status, created_at, current_station_id))')
+      .select('*, stations (*, vehicles (id, plate, make, model, owner_name, status, created_at, current_station_id, due_date))')
       .order('order_index')
       .order('order_index', { referencedTable: 'stations' })
 
