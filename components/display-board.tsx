@@ -191,12 +191,14 @@ export function DisplayBoard({ stages: initialStages, profile, currentHistory: i
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="text-gray-400 text-sm capitalize">
-            {clock.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </span>
-          <div className="flex items-center gap-2 text-white font-mono text-xl font-bold">
-            <Clock className="h-4 w-4 text-gray-400" />
-            {clock.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          <div className="text-right">
+            <div className="flex items-center gap-2 text-white font-mono text-4xl font-bold tracking-widest leading-none">
+              <Clock className="h-5 w-5 text-gray-400 shrink-0" />
+              {clock.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </div>
+            <p className="text-gray-500 text-xs capitalize text-right mt-1">
+              {clock.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
           </div>
           <button
             onClick={handleFullscreen}
