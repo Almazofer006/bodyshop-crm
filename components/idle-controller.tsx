@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 
 interface IdleControllerProps {
   userId: string
-  variant?: 'light' | 'dark' // light = dashboard, dark = TV
+  variant?: 'light' | 'dark'
 }
 
 interface Session {
@@ -30,7 +30,8 @@ function isWorkingHours() {
 export function IdleController({ userId, variant = 'light' }: IdleControllerProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [elapsed, setElapsed] = useState(0)
-  const [withinHours, setWithinHours] = useState(isWorkingHours())
+  // Start as true to avoid SSR UTC mismatch — corrected immediately on client mount
+  const [withinHours, setWithinHours] = useState(true)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -57,6 +58,13 @@ export function IdleController({ userId, variant = 'light' }: IdleControllerProp
 
   useEffect(() => { fetchSession() }, [fetchSession])
 
+  // Working hours — check immediately on client mount, then every 30s
+  useEffect(() => {
+    setWithinHours(isWorkingHours())
+    const t = setInterval(() => setWithinHours(isWorkingHours()), 30000)
+    return () => clearInterval(t)
+  }, [])
+
   // Timer tick
   useEffect(() => {
     if (session) {
@@ -66,12 +74,6 @@ export function IdleController({ userId, variant = 'light' }: IdleControllerProp
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [session])
-
-  // Working hours refresh
-  useEffect(() => {
-    const t = setInterval(() => setWithinHours(isWorkingHours()), 30000)
-    return () => clearInterval(t)
-  }, [])
 
   const handleStart = async () => {
     if (busy) return
@@ -113,62 +115,38 @@ export function IdleController({ userId, variant = 'light' }: IdleControllerProp
 
   const isDark = variant === 'dark'
 
-  // Button when DISABLED (outside working hours, no active session)
-  if (!withinHours && !session) {
-    return (
-      <button
-        disabled
-        title="Доступно с 10:00 до 20:00"
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed ${
-          isDark
-            ? 'text-gray-600 bg-gray-800/50 border border-gray-700/50'
-            : 'text-gray-400 bg-gray-100 border border-gray-200'
-        }`}
-      >
-        <Timer className="h-4 w-4" />
-        Простой
-      </button>
-    )
-  }
-
-  // Button when ACTIVE (idle running)
+  // ACTIVE: idle is running
   if (session) {
     return (
       <>
         <button
           onClick={handleEnd}
           disabled={busy}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 border border-red-700 transition-colors shadow-sm"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-base font-bold text-white bg-red-600 hover:bg-red-700 border border-red-700 transition-colors shadow-md"
         >
-          <span className="h-2 w-2 rounded-full bg-white animate-pulse shrink-0" />
+          <span className="h-2.5 w-2.5 rounded-full bg-white animate-pulse shrink-0" />
           {formatElapsed(elapsed)}
         </button>
 
         {/* Fullscreen overlay */}
         <div className="fixed inset-0 bg-gray-950 z-[9999] flex flex-col items-center justify-center select-none cursor-default">
-          {/* Background pattern */}
-          <div className="absolute inset-0 opacity-5"
+          <div className="absolute inset-0 opacity-[0.03]"
             style={{ backgroundImage: 'repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)', backgroundSize: '20px 20px' }}
           />
-
           <p className="text-white/30 text-base font-medium uppercase tracking-[0.4em] mb-4 z-10">
             рабочее место недоступно
           </p>
-
           <h1 className="text-[14vw] sm:text-[12vw] font-black text-red-500 uppercase leading-none tracking-tight z-10 drop-shadow-2xl">
             ПРОСТОЙ
           </h1>
-
           <p className="text-[10vw] sm:text-[8vw] font-mono font-bold text-white mt-6 tabular-nums z-10"
             style={{ textShadow: '0 0 40px rgba(255,255,255,0.2)' }}
           >
             {formatElapsed(elapsed)}
           </p>
-
           <p className="text-white/30 text-sm mt-4 z-10">
             Начало: {new Date(session.started_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
           </p>
-
           <button
             onClick={handleEnd}
             disabled={busy}
@@ -177,27 +155,38 @@ export function IdleController({ userId, variant = 'light' }: IdleControllerProp
             <Timer className="h-6 w-6" />
             {busy ? 'Подождите...' : 'Приступить к работе'}
           </button>
-
-          <p className="mt-4 text-white/20 text-sm z-10">
-            Нажмите кнопку чтобы завершить простой
-          </p>
+          <p className="mt-4 text-white/20 text-sm z-10">Нажмите кнопку чтобы завершить простой</p>
         </div>
       </>
     )
   }
 
-  // Button when INACTIVE (ready to start)
+  // DISABLED: outside working hours
+  if (!withinHours) {
+    return (
+      <button
+        disabled
+        title="Доступно с 10:00 до 20:00"
+        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-base font-semibold cursor-not-allowed ${
+          isDark
+            ? 'text-gray-600 bg-gray-800/50 border border-gray-700/50'
+            : 'text-gray-400 bg-gray-100 border border-gray-200'
+        }`}
+      >
+        <Timer className="h-5 w-5" />
+        Простой
+      </button>
+    )
+  }
+
+  // INACTIVE: ready to start — blue button
   return (
     <button
       onClick={handleStart}
       disabled={busy}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm ${
-        isDark
-          ? 'text-white bg-blue-600 hover:bg-blue-700 border border-blue-700'
-          : 'text-white bg-blue-600 hover:bg-blue-700 border border-blue-700'
-      }`}
+      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 border border-blue-700 transition-colors shadow-md"
     >
-      <Timer className="h-4 w-4" />
+      <Timer className="h-5 w-5" />
       {busy ? '...' : 'Простой'}
     </button>
   )
