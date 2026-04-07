@@ -87,10 +87,6 @@ export function Navbar({ profile, activeIdleSession }: NavbarProps) {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {/* Idle button */}
-          {profile.role !== 'client' && (
-            <IdleButton userId={profile.id} activeSession={activeIdleSession} />
-          )}
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-800 transition-colors">

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import { IdleController } from '@/components/idle-controller'
 import type { Stage, Station, Vehicle, Profile } from '@/lib/types'
 
 function formatHours(hours: number) {
@@ -191,6 +192,8 @@ export function DisplayBoard({ stages: initialStages, profile, currentHistory: i
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Idle button */}
+          <IdleController userId={profile.id} variant="dark" />
           <div className="text-right">
             <div className="flex items-center gap-2 text-white font-mono text-4xl font-bold tracking-widest leading-none">
               <Clock className="h-5 w-5 text-gray-400 shrink-0" />

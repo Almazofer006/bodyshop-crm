@@ -15,6 +15,7 @@ import { DraggableVehicleCard } from '@/components/draggable-vehicle-card'
 import { DroppableStation } from '@/components/droppable-station'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { IdleController } from '@/components/idle-controller'
 import type { Stage, Profile, Vehicle, Station } from '@/lib/types'
 
 const STAGE_COLORS: Record<string, string> = {
@@ -171,13 +172,16 @@ export function StationBoard({ stages: initialStages, profile }: StationBoardPro
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div>
-        <div className="mb-4 flex items-center gap-3">
-          <Badge variant="secondary" className="text-sm px-3 py-1">
-            Активных авто: {totalActive}
-          </Badge>
-          {canDrag && (
-            <span className="text-xs text-gray-400">Перетащите карточку для перемещения авто</span>
-          )}
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              Активных авто: {totalActive}
+            </Badge>
+            {canDrag && (
+              <span className="text-xs text-gray-400 hidden sm:block">Перетащите карточку для перемещения авто</span>
+            )}
+          </div>
+          <IdleController userId={profile.id} variant="light" />
         </div>
         <div className="space-y-6">
           {stages.map((stage) => {
