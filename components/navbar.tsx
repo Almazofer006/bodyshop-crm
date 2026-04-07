@@ -1,26 +1,24 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Car, LayoutDashboard, Users, LogOut, PlusCircle } from 'lucide-react'
+import { Car, LayoutDashboard, Users, LogOut, PlusCircle, Menu, X } from 'lucide-react'
 import type { Profile } from '@/lib/types'
 
-interface NavbarProps {
-  profile: Profile
-}
+interface NavbarProps { profile: Profile }
 
 export function Navbar({ profile }: NavbarProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -34,84 +32,118 @@ export function Navbar({ profile }: NavbarProps) {
     : profile.email[0].toUpperCase()
 
   const roleLabel: Record<string, string> = {
-    admin: 'Администратор',
-    manager: 'Менеджер',
-    master: 'Мастер',
-    client: 'Клиент',
+    admin: 'Администратор', manager: 'Менеджер', master: 'Мастер', client: 'Клиент',
   }
 
+  const isActive = (href: string) => pathname === href
+
+  const navLinks = [
+    { href: '/dashboard', label: 'Доска', icon: LayoutDashboard, show: true },
+    { href: '/vehicles', label: 'Автомобили', icon: Car, show: profile.role === 'admin' || profile.role === 'manager' },
+    { href: '/admin/users', label: 'Пользователи', icon: Users, show: profile.role === 'admin' },
+  ].filter(l => l.show)
+
   return (
-    <header className="bg-gray-950 border-b border-gray-800 px-4 py-3">
-      <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
-        {/* Logo + Nav */}
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="flex items-center gap-2 font-bold text-white text-lg">
-            <div className="bg-blue-600 p-1.5 rounded-lg">
+    <header className="bg-gray-950 border-b border-gray-800">
+      <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between">
+
+        {/* Logo */}
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard" className="flex items-center gap-2 font-bold text-white text-lg" onClick={() => setMobileOpen(false)}>
+            <div className="bg-blue-600 p-1.5 rounded-lg shrink-0">
               <Car className="h-5 w-5 text-white" />
             </div>
             <span className="hidden sm:block tracking-tight">Кузовной центр</span>
           </Link>
 
-          <nav className="flex items-center gap-1">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="gap-2 text-gray-300 hover:text-white hover:bg-gray-800">
-                <LayoutDashboard className="h-4 w-4" />
-                <span className="hidden md:block">Доска</span>
-              </Button>
-            </Link>
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map(({ href, label, icon: Icon }) => (
+              <Link key={href} href={href}>
+                <Button
+                  variant="ghost" size="sm"
+                  className={`gap-2 ${isActive(href) ? 'bg-gray-800 text-white' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Button>
+              </Link>
+            ))}
             {(profile.role === 'admin' || profile.role === 'manager') && (
-              <>
-                <Link href="/vehicles">
-                  <Button variant="ghost" size="sm" className="gap-2 text-gray-300 hover:text-white hover:bg-gray-800">
-                    <Car className="h-4 w-4" />
-                    <span className="hidden md:block">Автомобили</span>
-                  </Button>
-                </Link>
-                <Link href="/vehicles/new">
-                  <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white ml-1">
-                    <PlusCircle className="h-4 w-4" />
-                    <span className="hidden md:block">Добавить авто</span>
-                  </Button>
-                </Link>
-              </>
-            )}
-            {profile.role === 'admin' && (
-              <Link href="/admin/users">
-                <Button variant="ghost" size="sm" className="gap-2 text-gray-300 hover:text-white hover:bg-gray-800">
-                  <Users className="h-4 w-4" />
-                  <span className="hidden md:block">Пользователи</span>
+              <Link href="/vehicles/new">
+                <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white ml-1">
+                  <PlusCircle className="h-4 w-4" />
+                  Добавить авто
                 </Button>
               </Link>
             )}
           </nav>
         </div>
 
-        {/* User menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-800 transition-colors">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-blue-600 text-white text-sm font-bold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium leading-none text-white">
-                {profile.full_name || profile.email}
-              </p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {roleLabel[profile.role]}
-              </p>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-              <LogOut className="h-4 w-4 mr-2" />
-              Выйти
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Right side */}
+        <div className="flex items-center gap-2">
+          {/* User menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-800 transition-colors">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-blue-600 text-white text-sm font-bold">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="hidden sm:block text-left">
+                <p className="text-sm font-medium leading-none text-white">{profile.full_name || profile.email}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{roleLabel[profile.role]}</p>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                <LogOut className="h-4 w-4 mr-2" />Выйти
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden p-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div className="md:hidden bg-gray-900 border-t border-gray-800 px-4 py-3 space-y-1">
+          {navLinks.map(({ href, label, icon: Icon }) => (
+            <Link key={href} href={href} onClick={() => setMobileOpen(false)}>
+              <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                isActive(href) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}>
+                <Icon className="h-5 w-5" />
+                <span className="font-medium">{label}</span>
+              </div>
+            </Link>
+          ))}
+          {(profile.role === 'admin' || profile.role === 'manager') && (
+            <Link href="/vehicles/new" onClick={() => setMobileOpen(false)}>
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-600 text-white mt-2">
+                <PlusCircle className="h-5 w-5" />
+                <span className="font-medium">Добавить авто</span>
+              </div>
+            </Link>
+          )}
+          <div className="pt-2 border-t border-gray-800 mt-2">
+            <p className="text-xs text-gray-500 px-3 pb-1">{profile.email}</p>
+            <button
+              onClick={() => { handleLogout(); setMobileOpen(false) }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-gray-800 w-full transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+              <span className="font-medium">Выйти</span>
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

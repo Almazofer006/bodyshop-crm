@@ -49,6 +49,9 @@ interface StationBoardProps {
 export function StationBoard({ stages: initialStages, profile }: StationBoardProps) {
   const [stages, setStages] = useState(initialStages)
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null)
+  const [collapsed, setCollapsed] = useState<Record<number, boolean>>({})
+
+  const toggleCollapse = (id: number) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }))
 
   const canDrag = profile.role === 'admin' || profile.role === 'manager'
 
@@ -184,12 +187,16 @@ export function StationBoard({ stages: initialStages, profile }: StationBoardPro
 
             return (
               <div key={stage.id} className={`border-2 rounded-xl overflow-hidden ${bgColor}`}>
-                <div className={`px-4 py-3 flex items-center justify-between ${headerColor}`}>
-                  <h2 className="font-bold text-base">{stage.name}</h2>
+                <button onClick={() => toggleCollapse(stage.id)} className={`w-full px-4 py-3 flex items-center justify-between ${headerColor} transition-opacity hover:opacity-90`}>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-bold text-base">{stage.name}</h2>
+                    <span className="text-xs opacity-60 md:hidden">{collapsed[stage.id] ? "▶" : "▼"}</span>
+                  </div>
                   <Badge variant="outline" className="bg-white/50 text-current border-current/30">
                     {stageVehicles.length} авто
                   </Badge>
-                </div>
+                </button>
+                {!collapsed[stage.id] && (
                 <div className="p-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {(stage.stations || []).map((station) => (
@@ -216,6 +223,7 @@ export function StationBoard({ stages: initialStages, profile }: StationBoardPro
                     ))}
                   </div>
                 </div>
+              )}
               </div>
             )
           })}

@@ -20,7 +20,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar profile={profile as Profile} />
-      <main className="flex-1 p-4 max-w-screen-2xl mx-auto w-full">
+      <main className="flex-1 p-3 sm:p-4 max-w-screen-2xl mx-auto w-full">
         {children}
       </main>
     </div>
