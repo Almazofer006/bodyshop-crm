@@ -10,12 +10,13 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Car, LayoutDashboard, Users, LogOut, PlusCircle, Menu, X, BarChart2, Monitor, Table2 } from 'lucide-react'
-import type { Profile } from '@/lib/types'
+import { Car, LayoutDashboard, Users, LogOut, PlusCircle, Menu, X, BarChart2, Monitor, Table2, Timer } from 'lucide-react'
+import type { Profile, IdleSession } from '@/lib/types'
+import { IdleButton } from '@/components/idle-button'
 
-interface NavbarProps { profile: Profile }
+interface NavbarProps { profile: Profile; activeIdleSession: IdleSession | null }
 
-export function Navbar({ profile }: NavbarProps) {
+export function Navbar({ profile, activeIdleSession }: NavbarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -43,6 +44,7 @@ export function Navbar({ profile }: NavbarProps) {
     { href: '/leonid', label: 'Таблица', icon: Table2, show: true },
     { href: '/vehicles', label: 'Автомобили', icon: Car, show: profile.role === 'admin' || profile.role === 'manager' },
     { href: '/stats', label: 'Статистика', icon: BarChart2, show: profile.role === 'admin' || profile.role === 'manager' },
+    { href: '/idle', label: 'Простои', icon: Timer, show: profile.role === 'admin' || profile.role === 'manager' },
     { href: '/admin/users', label: 'Пользователи', icon: Users, show: profile.role === 'admin' },
   ].filter(l => l.show)
 
@@ -85,6 +87,10 @@ export function Navbar({ profile }: NavbarProps) {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* Idle button */}
+          {profile.role !== 'client' && (
+            <IdleButton userId={profile.id} activeSession={activeIdleSession} />
+          )}
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-gray-800 transition-colors">

@@ -67,6 +67,14 @@ export interface Service {
   order_index: number
 }
 
+export interface IdleSession {
+  id: string
+  user_id: string
+  started_at: string
+  ended_at: string | null
+  created_at: string
+}
+
 export interface VehicleService {
   id: string
   vehicle_id: string

@@ -17,9 +17,16 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   if (!profile) redirect('/auth/login')
 
+  const { data: activeIdleSession } = await supabase
+    .from('idle_sessions')
+    .select('*')
+    .eq('user_id', user.id)
+    .is('ended_at', null)
+    .single()
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar profile={profile as Profile} />
+      <Navbar profile={profile as Profile} activeIdleSession={activeIdleSession ?? null} />
       <main className="flex-1 p-3 sm:p-4 max-w-screen-2xl mx-auto w-full">
         {children}
       </main>
