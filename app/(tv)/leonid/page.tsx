@@ -23,7 +23,7 @@ export default async function LeonidPage() {
 
   const { data: vehicles } = await supabase
     .from('vehicles')
-    .select('id, plate, make, model, owner_name, created_at, status, current_station_id, notes')
+    .select('id, plate, make, model, owner_name, created_at, status, current_station_id, notes, due_date')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
 

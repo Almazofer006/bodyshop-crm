@@ -34,6 +34,7 @@ export interface Vehicle {
   status: 'active' | 'completed' | 'cancelled'
   current_station_id: number | null
   notes: string | null
+  due_date: string | null
   created_at: string
   created_by: string
   station?: Station

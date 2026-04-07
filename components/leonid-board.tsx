@@ -8,7 +8,19 @@ interface Stage { id: number; name: string; order_index: number }
 interface Vehicle {
   id: string; plate: string; make: string; model: string
   owner_name: string; created_at: string; status: string
-  current_station_id: number | null; notes: string | null
+  current_station_id: number | null; notes: string | null; due_date: string | null
+}
+
+function getDueInfo(dueDate: string | null) {
+  if (!dueDate) return null
+  const now = new Date(); now.setHours(0,0,0,0)
+  const due = new Date(dueDate)
+  const diff = Math.ceil((due.getTime() - now.getTime()) / 86400000)
+  const label = due.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })
+  if (diff < 0) return { label: `${label} ⚠️`, cls: 'bg-red-100 text-red-700 font-bold' }
+  if (diff === 0) return { label: `${label} сегодня`, cls: 'bg-orange-100 text-orange-700 font-bold' }
+  if (diff === 1) return { label: `${label} завтра`, cls: 'bg-yellow-100 text-yellow-700 font-semibold' }
+  return { label, cls: 'text-gray-600' }
 }
 interface HistoryEntry {
   vehicle_id: string; station_id: number
@@ -99,6 +111,7 @@ export function LeonidBoard({ stages, vehicles, history, stations }: LeonidBoard
               <th className="bg-gray-800 text-white px-2 py-2 border border-gray-600 text-left w-32">Авто</th>
               <th className="bg-gray-800 text-white px-2 py-2 border border-gray-600 text-left w-28">Клиент</th>
               <th className="bg-gray-800 text-white px-2 py-2 border border-gray-600 text-center w-16">Принят</th>
+              <th className="bg-gray-800 text-white px-2 py-2 border border-gray-600 text-center w-20">Срок выдачи</th>
               {stages.map(stage => (
                 <th
                   key={stage.id}
@@ -141,6 +154,14 @@ export function LeonidBoard({ stages, vehicles, history, stations }: LeonidBoard
                   {/* Date */}
                   <td className="px-1 py-1 border border-gray-200 text-center text-gray-500">
                     {fmt(vehicle.created_at)}
+                  </td>
+                  {/* Due date */}
+                  <td className="px-1 py-1 border border-gray-200 text-center">
+                    {(() => {
+                      const info = getDueInfo(vehicle.due_date)
+                      if (!info) return <span className="text-gray-300 text-xs">—</span>
+                      return <span className={`text-xs px-1 py-0.5 rounded ${info.cls}`}>{info.label}</span>
+                    })()}
                   </td>
 
                   {/* Stage cells */}

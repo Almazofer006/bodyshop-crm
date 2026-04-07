@@ -22,6 +22,7 @@ export default function NewVehiclePage() {
     owner_name: '',
     owner_phone: '',
     notes: '',
+    due_date: '',
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +37,7 @@ export default function NewVehiclePage() {
     const { data: parkingStation } = await supabase
       .from('stations')
       .select('id')
-      .eq('name', 'Парковка')
+      .eq('name', 'Парковка 1')
       .single()
 
     const { data: vehicle, error } = await supabase
@@ -48,6 +49,7 @@ export default function NewVehiclePage() {
         owner_name: form.owner_name,
         owner_phone: form.owner_phone || null,
         notes: form.notes || null,
+        due_date: form.due_date || null,
         status: 'active',
         current_station_id: parkingStation?.id || null,
         created_by: user.id,
@@ -61,7 +63,6 @@ export default function NewVehiclePage() {
       return
     }
 
-    // Create initial history record
     if (parkingStation && vehicle) {
       await supabase.from('vehicle_history').insert({
         vehicle_id: vehicle.id,
@@ -99,12 +100,9 @@ export default function NewVehiclePage() {
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="plate">Госномер *</Label>
                 <Input
-                  id="plate"
-                  placeholder="А123БВ777"
-                  value={form.plate}
-                  onChange={set('plate')}
-                  required
-                  className="uppercase"
+                  id="plate" placeholder="А123БВ777"
+                  value={form.plate} onChange={set('plate')}
+                  required className="uppercase"
                 />
               </div>
               <div className="space-y-2">
@@ -125,14 +123,21 @@ export default function NewVehiclePage() {
               <Label htmlFor="owner_phone">Телефон</Label>
               <Input id="owner_phone" placeholder="+7 (999) 000-00-00" value={form.owner_phone} onChange={set('owner_phone')} />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="due_date">Срок выдачи автомобиля</Label>
+              <Input
+                id="due_date" type="date"
+                value={form.due_date} onChange={set('due_date')}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="notes">Описание повреждений / заметки</Label>
               <Textarea
-                id="notes"
-                placeholder="Вмятина на переднем крыле, царапины..."
-                value={form.notes}
-                onChange={set('notes')}
-                rows={3}
+                id="notes" placeholder="Вмятина на переднем крыле, царапины..."
+                value={form.notes} onChange={set('notes')} rows={3}
               />
             </div>
 
