@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/sonner'
 const inter = Inter({ subsets: ['latin', 'cyrillic'] })
 
 export const metadata: Metadata = {
-  title: 'Кузовной центр CRM',
+  title: 'Центр Кузовного ремонта Авалон',
   description: 'Система управления автомобилями в ремонте',
 }
 

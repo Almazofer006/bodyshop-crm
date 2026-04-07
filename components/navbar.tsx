@@ -55,7 +55,7 @@ export function Navbar({ profile }: NavbarProps) {
             <div className="bg-blue-600 p-1.5 rounded-lg shrink-0">
               <Car className="h-5 w-5 text-white" />
             </div>
-            <span className="hidden sm:block tracking-tight">Кузовной центр</span>
+            <span className="hidden sm:block tracking-tight">Центр Кузовного ремонта Авалон</span>
           </Link>
 
           {/* Desktop nav */}

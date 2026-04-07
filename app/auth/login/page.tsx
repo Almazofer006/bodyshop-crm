@@ -38,7 +38,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center bg-blue-600 p-12">
         <Car className="h-20 w-20 text-white mb-6" />
         <h1 className="text-4xl font-bold text-white text-center leading-tight">
-          Кузовной центр
+          Центр Кузовного ремонта Авалон
         </h1>
         <p className="text-blue-100 text-lg mt-4 text-center">
           Система управления ремонтом автомобилей
@@ -60,7 +60,7 @@ export default function LoginPage() {
             <div className="bg-blue-600 p-2 rounded-lg">
               <Car className="h-6 w-6 text-white" />
             </div>
-            <span className="text-white font-bold text-xl">Кузовной центр CRM</span>
+            <span className="text-white font-bold text-xl">Центр Кузовного ремонта Авалон</span>
           </div>
 
           <h2 className="text-3xl font-bold text-white mb-2">Добро пожаловать</h2>

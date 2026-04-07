@@ -184,7 +184,7 @@ export function DisplayBoard({ stages: initialStages, profile, currentHistory: i
           <div className="bg-blue-600 p-1.5 rounded-lg">
             <Car className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-lg tracking-tight text-white">Кузовной центр</span>
+          <span className="font-bold text-lg tracking-tight text-white">Центр Кузовного ремонта Авалон</span>
           <div className="bg-blue-600/20 border border-blue-500/30 text-blue-400 text-sm px-3 py-0.5 rounded-full font-medium">
             {totalActive} авто в работе
           </div>
