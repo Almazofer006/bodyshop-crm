@@ -22,7 +22,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     .select('*')
     .eq('user_id', user.id)
     .is('ended_at', null)
-    .single()
+    .maybeSingle()
 
   return (
     <div className="min-h-screen flex flex-col">
