@@ -9,6 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { IdleController } from '@/components/idle-controller'
+import { usePermissions } from '@/lib/permissions-context'
 import type { Stage, Station, Vehicle, Profile } from '@/lib/types'
 
 function formatHours(hours: number) {
@@ -58,8 +59,9 @@ export function DisplayBoard({ stages: initialStages, profile, currentHistory: i
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
-  const canManage = profile.role === 'admin' || profile.role === 'manager'
-  const canComplete = profile.role === 'admin' || profile.role === 'manager'
+  const perms = usePermissions()
+  const canManage = perms.can_move_vehicles
+  const canComplete = perms.can_move_vehicles
 
   const refetch = useCallback(async () => {
     const supabase = createClient()

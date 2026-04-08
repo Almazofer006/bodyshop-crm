@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select'
 import { Car, MoveRight, Clock, CalendarClock } from 'lucide-react'
 import { toast } from 'sonner'
+import { usePermissions } from '@/lib/permissions-context'
 import type { Vehicle, Station, Profile } from '@/lib/types'
 
 interface VehicleCardProps {
@@ -44,8 +45,9 @@ export function VehicleCard({ vehicle, profile, stations, onMoved }: VehicleCard
   const [selectedStation, setSelectedStation] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const canMove = profile.role === 'admin' || profile.role === 'manager'
-  const dueInfo = getDueDateInfo(vehicle.due_date)
+  const perms = usePermissions()
+  const canMove = perms.can_move_vehicles
+  const dueInfo = perms.see_due_date ? getDueDateInfo(vehicle.due_date) : null
 
   const handleMove = async () => {
     if (!selectedStation) return
@@ -90,7 +92,9 @@ export function VehicleCard({ vehicle, profile, stations, onMoved }: VehicleCard
             <div className="min-w-0 flex-1">
               <p className="font-bold text-sm text-gray-900 leading-tight">{vehicle.plate}</p>
               <p className="text-xs text-gray-500 truncate">{vehicle.make} {vehicle.model}</p>
-              <p className="text-xs text-gray-400 truncate">{vehicle.owner_name}</p>
+              {perms.see_owner_name && (
+                <p className="text-xs text-gray-400 truncate">{vehicle.owner_name}</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-1 mt-1.5">

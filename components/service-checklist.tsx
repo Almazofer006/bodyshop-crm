@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { CheckCircle2, Circle, ClipboardList, Plus, Trash2 } from 'lucide-react'
+import { usePermissions } from '@/lib/permissions-context'
 import type { VehicleService, Service, Profile } from '@/lib/types'
 
 interface ServiceChecklistProps {
@@ -32,8 +33,9 @@ export function ServiceChecklist({
   const [showAdd, setShowAdd] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const canManage = profile.role === 'admin' || profile.role === 'manager'
-  const canComplete = canManage || profile.role === 'master'
+  const perms = usePermissions()
+  const canManage = perms.can_manage_services
+  const canComplete = perms.can_complete_services
 
   const completed = items.filter(i => i.completed).length
   const total = items.length

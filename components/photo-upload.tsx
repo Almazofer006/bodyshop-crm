@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Upload, ImageIcon, Loader2 } from 'lucide-react'
 import Image from 'next/image'
+import { usePermissions } from '@/lib/permissions-context'
 import type { Profile, VehiclePhoto } from '@/lib/types'
 
 interface PhotoUploadProps {
@@ -20,7 +21,8 @@ export function PhotoUpload({ vehicleId, photos: initialPhotos, profile }: Photo
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const canUpload = profile.role === 'admin' || profile.role === 'manager' || profile.role === 'master'
+  const perms = usePermissions()
+  const canUpload = perms.can_upload_photos
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files

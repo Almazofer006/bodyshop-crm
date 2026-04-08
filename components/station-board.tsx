@@ -16,6 +16,7 @@ import { DroppableStation } from '@/components/droppable-station'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { IdleController } from '@/components/idle-controller'
+import { usePermissions } from '@/lib/permissions-context'
 import type { Stage, Profile, Vehicle, Station } from '@/lib/types'
 
 const STAGE_COLORS: Record<string, string> = {
@@ -51,10 +52,11 @@ export function StationBoard({ stages: initialStages, profile }: StationBoardPro
   const [stages, setStages] = useState(initialStages)
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null)
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>({})
+  const perms = usePermissions()
 
   const toggleCollapse = (id: number) => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }))
 
-  const canDrag = profile.role === 'admin' || profile.role === 'manager'
+  const canDrag = perms.can_move_vehicles
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
