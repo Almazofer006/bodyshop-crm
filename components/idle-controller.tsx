@@ -30,7 +30,6 @@ function isWorkingHours() {
 export function IdleController({ userId, variant = 'light' }: IdleControllerProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [elapsed, setElapsed] = useState(0)
-  // Start as true to avoid SSR UTC mismatch — corrected immediately on client mount
   const [withinHours, setWithinHours] = useState(true)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
@@ -58,14 +57,12 @@ export function IdleController({ userId, variant = 'light' }: IdleControllerProp
 
   useEffect(() => { fetchSession() }, [fetchSession])
 
-  // Working hours — check immediately on client mount, then every 30s
   useEffect(() => {
     setWithinHours(isWorkingHours())
     const t = setInterval(() => setWithinHours(isWorkingHours()), 30000)
     return () => clearInterval(t)
   }, [])
 
-  // Timer tick
   useEffect(() => {
     if (session) {
       timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000)
@@ -115,20 +112,19 @@ export function IdleController({ userId, variant = 'light' }: IdleControllerProp
 
   const isDark = variant === 'dark'
 
-  // ACTIVE: idle is running
+  // ACTIVE: idle running — big red button + overlay
   if (session) {
     return (
       <>
         <button
           onClick={handleEnd}
           disabled={busy}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-base font-bold text-white bg-red-600 hover:bg-red-700 border border-red-700 transition-colors shadow-md"
+          className="flex items-center gap-3 px-8 py-4 rounded-xl text-xl font-bold text-white bg-red-600 hover:bg-red-700 border-2 border-red-700 transition-colors shadow-lg"
         >
-          <span className="h-2.5 w-2.5 rounded-full bg-white animate-pulse shrink-0" />
+          <span className="h-3 w-3 rounded-full bg-white animate-pulse shrink-0" />
           {formatElapsed(elapsed)}
         </button>
 
-        {/* Fullscreen overlay */}
         <div className="fixed inset-0 bg-gray-950 z-[9999] flex flex-col items-center justify-center select-none cursor-default">
           <div className="absolute inset-0 opacity-[0.03]"
             style={{ backgroundImage: 'repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)', backgroundSize: '20px 20px' }}
@@ -167,26 +163,26 @@ export function IdleController({ userId, variant = 'light' }: IdleControllerProp
       <button
         disabled
         title="Доступно с 10:00 до 20:00"
-        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-base font-semibold cursor-not-allowed ${
+        className={`flex items-center gap-3 px-8 py-4 rounded-xl text-xl font-semibold cursor-not-allowed ${
           isDark
-            ? 'text-gray-600 bg-gray-800/50 border border-gray-700/50'
-            : 'text-gray-400 bg-gray-100 border border-gray-200'
+            ? 'text-gray-600 bg-gray-800/50 border-2 border-gray-700/50'
+            : 'text-gray-400 bg-gray-100 border-2 border-gray-200'
         }`}
       >
-        <Timer className="h-5 w-5" />
+        <Timer className="h-6 w-6" />
         Простой
       </button>
     )
   }
 
-  // INACTIVE: ready to start — blue button
+  // INACTIVE: ready to start — big blue button
   return (
     <button
       onClick={handleStart}
       disabled={busy}
-      className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 border border-blue-700 transition-colors shadow-md"
+      className="flex items-center gap-3 px-8 py-4 rounded-xl text-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 border-2 border-blue-700 transition-colors shadow-lg"
     >
-      <Timer className="h-5 w-5" />
+      <Timer className="h-6 w-6" />
       {busy ? '...' : 'Простой'}
     </button>
   )
