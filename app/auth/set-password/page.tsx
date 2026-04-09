@@ -25,35 +25,47 @@ export default function SetPasswordPage() {
     const supabase = createClient()
     supabaseRef.current = supabase
 
-    // Listen for auth state change from the invite token in hash
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth event:', event, session?.user?.email)
-        if (session?.user) {
-          const name = session.user.user_metadata?.full_name || ''
-          setUserName(name)
-          setSessionReady(true)
-          setChecking(false)
+    const initSession = async () => {
+      // 1. Пробуем извлечь токены из hash-фрагмента URL
+      const hash = window.location.hash.substring(1)
+      if (hash) {
+        const params = new URLSearchParams(hash)
+        const accessToken = params.get('access_token')
+        const refreshToken = params.get('refresh_token')
+
+        if (accessToken && refreshToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+
+          if (!error && data.session?.user) {
+            const name = data.session.user.user_metadata?.full_name || ''
+            setUserName(name)
+            setSessionReady(true)
+            setChecking(false)
+            // Очищаем hash из URL для безопасности
+            window.history.replaceState(null, '', window.location.pathname)
+            return
+          }
         }
       }
-    )
 
-    // Also check if already has a session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+      // 2. Проверяем существующую сессию (если пришли через callback)
+      const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         const name = session.user.user_metadata?.full_name || ''
         setUserName(name)
         setSessionReady(true)
         setChecking(false)
-      } else {
-        // No session yet — wait for onAuthStateChange to fire from hash
-        setTimeout(() => {
-          setChecking(false)
-        }, 5000)
+        return
       }
-    })
 
-    return () => subscription.unsubscribe()
+      // 3. Нет сессии — показываем форму (пользователь увидит ошибку при попытке)
+      setChecking(false)
+    }
+
+    initSession()
   }, [])
 
   const handleSetPassword = async (e: React.FormEvent) => {
