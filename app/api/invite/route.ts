@@ -21,8 +21,12 @@ export async function POST(request: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
+  // Определяем URL для редиректа после подтверждения приглашения
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin
+
   const { error } = await adminSupabase.auth.admin.inviteUserByEmail(email, {
     data: { full_name: full_name || '', role: role || 'master' },
+    redirectTo: `${siteUrl}/auth/callback?next=/auth/set-password`,
   })
 
   if (error) {
