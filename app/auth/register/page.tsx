@@ -1,44 +1,73 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Car } from 'lucide-react'
+import { Car, UserPlus, CheckCircle } from 'lucide-react'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter()
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
-  // Detect invite token in URL hash and redirect to set-password page
-  useEffect(() => {
-    const hash = window.location.hash
-    if (hash && hash.includes('type=invite')) {
-      window.location.href = "/auth/set-password" + hash
-    }
-  }, [])
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
+    if (password.length < 6) {
+      setError('Пароль должен содержать минимум 6 символов')
+      setLoading(false)
+      return
+    }
+
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: 'client',
+        },
+      },
+    })
 
     if (error) {
-      setError('Неверный email или пароль')
+      if (error.message.includes('already registered')) {
+        setError('Пользователь с таким email уже зарегистрирован')
+      } else {
+        setError(error.message)
+      }
       setLoading(false)
-    } else {
+      return
+    }
+
+    setSuccess(true)
+    setTimeout(() => {
       router.push('/dashboard')
       router.refresh()
-    }
+    }, 1500)
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="text-center">
+          <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Регистрация прошла успешно!</h2>
+          <p className="text-gray-400">Перенаправление...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -61,7 +90,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right panel - Login form */}
+      {/* Right panel - Register form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
@@ -72,10 +101,25 @@ export default function LoginPage() {
             <span className="text-white font-bold text-xl">Центр Кузовного ремонта Авалон</span>
           </div>
 
-          <h2 className="text-3xl font-bold text-white mb-2">Добро пожаловать</h2>
-          <p className="text-gray-400 mb-8">Войдите в систему</p>
+          <div className="flex items-center gap-3 mb-2">
+            <UserPlus className="h-6 w-6 text-blue-500" />
+            <h2 className="text-3xl font-bold text-white">Регистрация</h2>
+          </div>
+          <p className="text-gray-400 mb-8">Создайте аккаунт для доступа к системе</p>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleRegister} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-gray-300">ФИО</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="Иванов Иван Иванович"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus:border-blue-500 h-12"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-300">Email</Label>
               <Input
@@ -93,10 +137,11 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Минимум 6 символов"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
                 className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus:border-blue-500 h-12"
               />
             </div>
@@ -110,14 +155,14 @@ export default function LoginPage() {
               className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base"
               disabled={loading}
             >
-              {loading ? 'Вход...' : 'Войти'}
+              {loading ? 'Регистрация...' : 'Зарегистрироваться'}
             </Button>
           </form>
 
           <p className="text-center text-gray-500 mt-6">
-            Нет аккаунта?{' '}
-            <Link href="/auth/register" className="text-blue-500 hover:text-blue-400 font-medium">
-              Зарегистрироваться
+            Уже есть аккаунт?{' '}
+            <Link href="/auth/login" className="text-blue-500 hover:text-blue-400 font-medium">
+              Войти
             </Link>
           </p>
         </div>
