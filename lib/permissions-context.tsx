@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import type { RolePermissions } from '@/lib/types'
 
 export const defaultPermissions: RolePermissions = {
@@ -25,12 +26,66 @@ export const defaultPermissions: RolePermissions = {
 const PermissionsContext = createContext<RolePermissions>(defaultPermissions)
 
 export function PermissionsProvider({
-  permissions,
+  permissions: initialPermissions,
   children,
 }: {
   permissions: RolePermissions
   children: React.ReactNode
 }) {
+  const [permissions, setPermissions] = useState(initialPermissions)
+
+  const refreshPermissions = useCallback(async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    if (!profile) return
+
+    const { data: permsData } = await supabase
+      .from('role_permissions')
+      .select('*')
+      .eq('role', profile.role)
+      .maybeSingle()
+
+    if (permsData) {
+      setPermissions(permsData as RolePermissions)
+    } else {
+      setPermissions({ ...defaultPermissions, role: profile.role })
+    }
+  }, [])
+
+  useEffect(() => {
+    // Обновляем права когда пользователь возвращается на вкладку
+    const handleFocus = () => refreshPermissions()
+    window.addEventListener('focus', handleFocus)
+
+    // Также подписываемся на realtime-изменения профилей и прав
+    const supabase = createClient()
+    const channel = supabase
+      .channel('permissions-refresh')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+      }, () => refreshPermissions())
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'role_permissions',
+      }, () => refreshPermissions())
+      .subscribe()
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      supabase.removeChannel(channel)
+    }
+  }, [refreshPermissions])
+
   return (
     <PermissionsContext.Provider value={permissions}>
       {children}

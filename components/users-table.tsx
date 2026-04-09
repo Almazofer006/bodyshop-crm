@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,6 +30,7 @@ interface UsersTableProps {
 }
 
 export function UsersTable({ users: initialUsers }: UsersTableProps) {
+  const router = useRouter()
   const [users, setUsers] = useState(initialUsers)
   const [deleting, setDeleting] = useState<string | null>(null)
 
@@ -46,6 +48,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
 
     setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, role: newRole } : u))
     toast.success('Роль обновлена')
+    router.refresh()
   }
 
   const handleDelete = async (user: Profile) => {
