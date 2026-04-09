@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
-import { Users } from 'lucide-react'
+import { Users, Trash2, Loader2 } from 'lucide-react'
 import type { Profile, Role } from '@/lib/types'
 
 const roleLabel: Record<Role, string> = {
@@ -29,6 +30,7 @@ interface UsersTableProps {
 
 export function UsersTable({ users: initialUsers }: UsersTableProps) {
   const [users, setUsers] = useState(initialUsers)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   const handleRoleChange = async (userId: string, newRole: Role) => {
     const supabase = createClient()
@@ -44,6 +46,27 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
 
     setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, role: newRole } : u))
     toast.success('Роль обновлена')
+  }
+
+  const handleDelete = async (user: Profile) => {
+    const name = user.full_name || user.email
+    if (!confirm(`Удалить пользователя ${name}?\nЭто действие нельзя отменить.`)) return
+
+    setDeleting(user.id)
+    const res = await fetch('/api/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id }),
+    })
+
+    if (res.ok) {
+      setUsers((prev) => prev.filter((u) => u.id !== user.id))
+      toast.success(`${name} удалён`)
+    } else {
+      const data = await res.json()
+      toast.error(data.error || 'Ошибка удаления')
+    }
+    setDeleting(null)
   }
 
   return (
@@ -77,6 +100,19 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
                     <SelectItem value="client">Клиент</SelectItem>
                   </SelectContent>
                 </Select>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                  onClick={() => handleDelete(user)}
+                  disabled={deleting === user.id}
+                  title="Удалить пользователя"
+                >
+                  {deleting === user.id
+                    ? <Loader2 className="h-4 w-4 animate-spin" />
+                    : <Trash2 className="h-4 w-4" />
+                  }
+                </Button>
               </div>
             </div>
           ))}
