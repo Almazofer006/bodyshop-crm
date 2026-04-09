@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Car, Lock, Loader2, CheckCircle } from 'lucide-react'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export default function SetPasswordPage() {
   const router = useRouter()
+  const supabaseRef = useRef<SupabaseClient | null>(null)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,16 +19,20 @@ export default function SetPasswordPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [userName, setUserName] = useState('')
+  const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
+    supabaseRef.current = supabase
 
     // Listen for auth state change from the invite token in hash
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth event:', event, session?.user?.email)
         if (session?.user) {
           const name = session.user.user_metadata?.full_name || ''
           setUserName(name)
+          setSessionReady(true)
           setChecking(false)
         }
       }
@@ -37,12 +43,13 @@ export default function SetPasswordPage() {
       if (session?.user) {
         const name = session.user.user_metadata?.full_name || ''
         setUserName(name)
+        setSessionReady(true)
         setChecking(false)
       } else {
-        // No session and no hash token — redirect to login
+        // No session yet — wait for onAuthStateChange to fire from hash
         setTimeout(() => {
           setChecking(false)
-        }, 3000)
+        }, 5000)
       }
     })
 
@@ -64,11 +71,21 @@ export default function SetPasswordPage() {
     }
 
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.updateUser({ password })
+    const supabase = supabaseRef.current || createClient()
 
-    if (error) {
-      setError('Ошибка установки пароля. Попробуйте ещё раз.')
+    // Проверяем что сессия активна
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setError('Сессия истекла. Запросите новое приглашение.')
+      setLoading(false)
+      return
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password })
+
+    if (updateError) {
+      console.error('Update password error:', updateError)
+      setError(`Ошибка: ${updateError.message}`)
       setLoading(false)
       return
     }
