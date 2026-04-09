@@ -195,7 +195,7 @@ export function DisplayBoard({ stages: initialStages, profile, currentHistory: i
 
         <div className="flex items-center gap-4">
           {/* Idle button */}
-          <IdleController userId={profile.id} variant="dark" />
+          {perms.see_idle && <IdleController userId={profile.id} variant="dark" />}
           <div className="text-right">
             <div className="flex items-center gap-2 text-white font-mono text-4xl font-bold tracking-widest leading-none">
               <Clock className="h-5 w-5 text-gray-400 shrink-0" />

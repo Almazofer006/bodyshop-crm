@@ -183,7 +183,7 @@ export function StationBoard({ stages: initialStages, profile }: StationBoardPro
               <span className="text-xs text-gray-400 hidden sm:block">Перетащите карточку для перемещения авто</span>
             )}
           </div>
-          <IdleController userId={profile.id} variant="light" />
+          {perms.see_idle && <IdleController userId={profile.id} variant="light" />}
         </div>
         <div className="space-y-6">
           {stages.map((stage) => {
