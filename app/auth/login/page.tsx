@@ -19,9 +19,9 @@ export default function LoginPage() {
   useEffect(() => {
     const hash = window.location.hash
     if (hash && hash.includes('type=invite')) {
-      router.replace('/auth/set-password' + hash)
+      window.location.href = "/auth/set-password" + hash
     }
-  }, [router])
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
