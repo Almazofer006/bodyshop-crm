@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/navbar'
-import type { Profile } from '@/lib/types'
+import { PermissionsProvider, defaultPermissions } from '@/lib/permissions-context'
+import type { Profile, RolePermissions } from '@/lib/types'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -24,12 +25,24 @@ export default async function ProtectedLayout({ children }: { children: React.Re
     .is('ended_at', null)
     .maybeSingle()
 
+  const { data: permsData } = await supabase
+    .from('role_permissions')
+    .select('*')
+    .eq('role', profile.role)
+    .maybeSingle()
+
+  const permissions: RolePermissions = permsData
+    ? (permsData as RolePermissions)
+    : { ...defaultPermissions, role: profile.role }
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar profile={profile as Profile} activeIdleSession={activeIdleSession ?? null} />
-      <main className="flex-1 p-3 sm:p-4 max-w-screen-2xl mx-auto w-full">
-        {children}
-      </main>
-    </div>
+    <PermissionsProvider permissions={permissions}>
+      <div className="min-h-screen flex flex-col">
+        <Navbar profile={profile as Profile} activeIdleSession={activeIdleSession ?? null} />
+        <main className="flex-1 p-3 sm:p-4 max-w-screen-2xl mx-auto w-full">
+          {children}
+        </main>
+      </div>
+    </PermissionsProvider>
   )
 }

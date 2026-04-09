@@ -10,16 +10,17 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Car, LayoutDashboard, Users, LogOut, PlusCircle, Menu, X, BarChart2, Monitor, Table2, Timer } from 'lucide-react'
+import { Car, LayoutDashboard, Users, LogOut, PlusCircle, Menu, X, BarChart2, Monitor, Table2, Timer, Shield } from 'lucide-react'
+import { usePermissions } from '@/lib/permissions-context'
 import type { Profile, IdleSession } from '@/lib/types'
-import { IdleButton } from '@/components/idle-button'
 
 interface NavbarProps { profile: Profile; activeIdleSession: IdleSession | null }
 
-export function Navbar({ profile, activeIdleSession }: NavbarProps) {
+export function Navbar({ profile }: NavbarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const perms = usePermissions()
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -39,13 +40,14 @@ export function Navbar({ profile, activeIdleSession }: NavbarProps) {
   const isActive = (href: string) => pathname === href
 
   const navLinks = [
-    { href: '/dashboard', label: 'Доска', icon: LayoutDashboard, show: true },
-    { href: '/display', label: 'TV режим', icon: Monitor, show: true },
-    { href: '/leonid', label: 'Таблица', icon: Table2, show: true },
-    { href: '/vehicles', label: 'Автомобили', icon: Car, show: profile.role === 'admin' || profile.role === 'manager' },
-    { href: '/stats', label: 'Статистика', icon: BarChart2, show: profile.role === 'admin' || profile.role === 'manager' },
-    { href: '/idle', label: 'Простои', icon: Timer, show: profile.role === 'admin' || profile.role === 'manager' },
-    { href: '/admin/users', label: 'Пользователи', icon: Users, show: profile.role === 'admin' },
+    { href: '/dashboard', label: 'Доска', icon: LayoutDashboard, show: perms.see_dashboard },
+    { href: '/display', label: 'TV режим', icon: Monitor, show: perms.see_tv_mode },
+    { href: '/leonid', label: 'Таблица', icon: Table2, show: perms.see_leonid },
+    { href: '/vehicles', label: 'Автомобили', icon: Car, show: perms.see_vehicles },
+    { href: '/stats', label: 'Статистика', icon: BarChart2, show: perms.see_stats },
+    { href: '/idle', label: 'Простои', icon: Timer, show: perms.see_idle },
+    { href: '/admin/users', label: 'Пользователи', icon: Users, show: perms.see_users },
+    { href: '/admin/permissions', label: 'Права', icon: Shield, show: profile.role === 'admin' },
   ].filter(l => l.show)
 
   return (
@@ -74,7 +76,7 @@ export function Navbar({ profile, activeIdleSession }: NavbarProps) {
                 </Button>
               </Link>
             ))}
-            {(profile.role === 'admin' || profile.role === 'manager') && (
+            {perms.can_add_vehicles && (
               <Link href="/vehicles/new">
                 <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700 text-white ml-1">
                   <PlusCircle className="h-4 w-4" />
@@ -129,7 +131,7 @@ export function Navbar({ profile, activeIdleSession }: NavbarProps) {
               </div>
             </Link>
           ))}
-          {(profile.role === 'admin' || profile.role === 'manager') && (
+          {perms.can_add_vehicles && (
             <Link href="/vehicles/new" onClick={() => setMobileOpen(false)}>
               <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-blue-600 text-white mt-2">
                 <PlusCircle className="h-5 w-5" />

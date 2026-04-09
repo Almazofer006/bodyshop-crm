@@ -75,6 +75,24 @@ export interface IdleSession {
   created_at: string
 }
 
+export interface RolePermissions {
+  role: string
+  see_dashboard: boolean
+  see_tv_mode: boolean
+  see_leonid: boolean
+  see_vehicles: boolean
+  see_stats: boolean
+  see_idle: boolean
+  see_users: boolean
+  see_owner_phone: boolean
+  see_owner_name: boolean
+  see_due_date: boolean
+  can_move_vehicles: boolean
+  can_add_vehicles: boolean
+  can_manage_services: boolean
+  can_complete_services: boolean
+  can_upload_photos: boolean
+}
 export interface VehicleService {
   id: string
   vehicle_id: string
