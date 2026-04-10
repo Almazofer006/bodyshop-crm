@@ -16,11 +16,21 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Detect invite token in URL hash and redirect to set-password page
   useEffect(() => {
+    // Detect invite token in URL hash → redirect to set-password
     const hash = window.location.hash
     if (hash && hash.includes('type=invite')) {
       window.location.href = "/auth/set-password" + hash
+      return
+    }
+
+    // Обработка ошибок от Supabase (истёкшая ссылка и т.д.)
+    const params = new URLSearchParams(window.location.search)
+    const errorCode = params.get('error_code')
+    if (errorCode === 'otp_expired') {
+      setError('Ссылка-приглашение истекла. Запросите новое приглашение у администратора или зарегистрируйтесь самостоятельно.')
+    } else if (params.get('error')) {
+      setError('Ошибка авторизации. Попробуйте войти с email и паролем.')
     }
   }, [])
 
