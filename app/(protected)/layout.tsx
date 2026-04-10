@@ -10,21 +10,15 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  // Запрашиваем профиль и idle-сессию параллельно
+  const [{ data: profile }, { data: activeIdleSession }] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).single(),
+    supabase.from('idle_sessions').select('*').eq('user_id', user.id).is('ended_at', null).maybeSingle(),
+  ])
 
   if (!profile) redirect('/auth/login')
 
-  const { data: activeIdleSession } = await supabase
-    .from('idle_sessions')
-    .select('*')
-    .eq('user_id', user.id)
-    .is('ended_at', null)
-    .maybeSingle()
-
+  // Теперь запрашиваем права (зависит от profile.role)
   const { data: permsData } = await supabase
     .from('role_permissions')
     .select('*')
