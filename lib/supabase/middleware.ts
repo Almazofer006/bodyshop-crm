@@ -2,6 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Страницы /auth/* не требуют проверки — пропускаем сразу
+  // Это критически важно: если Supabase спит, auth-страницы всё равно загрузятся
+  if (pathname.startsWith('/auth')) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -27,17 +35,9 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
-
-  if (!user && !pathname.startsWith('/auth')) {
+  if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
-    return NextResponse.redirect(url)
-  }
-
-  if (user && pathname.startsWith('/auth') && pathname !== '/auth/set-password' && pathname !== '/auth/callback') {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
