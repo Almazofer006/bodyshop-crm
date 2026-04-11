@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getServerPermissions } from '@/lib/supabase/get-permissions'
 import { InviteUserForm } from '@/components/invite-user-form'
 import { UsersTable } from '@/components/users-table'
 
@@ -10,8 +11,8 @@ export default async function UsersPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if (profile?.role !== 'admin') redirect('/dashboard')
+  const result = await getServerPermissions(supabase, user.id)
+  if (!result || !result.permissions.see_users) redirect('/dashboard')
 
   const { data: users } = await supabase
     .from('profiles')
@@ -25,7 +26,7 @@ export default async function UsersPage() {
         <p className="text-gray-500 mt-1">Приглашение и настройка прав</p>
       </div>
       <div className="grid gap-6">
-        <InviteUserForm />
+        {result.role === 'admin' && <InviteUserForm />}
         <UsersTable users={users || []} />
       </div>
     </div>

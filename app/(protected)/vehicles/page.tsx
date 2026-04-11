@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getServerPermissions } from '@/lib/supabase/get-permissions'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { PlusCircle, Car, Phone, MapPin } from 'lucide-react'
-import type { Profile } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,10 +20,8 @@ export default async function VehiclesPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'manager')) {
-    redirect('/dashboard')
-  }
+  const result = await getServerPermissions(supabase, user.id)
+  if (!result || !result.permissions.see_vehicles) redirect('/dashboard')
 
   const { data: vehicles } = await supabase
     .from('vehicles')
@@ -37,7 +35,7 @@ export default async function VehiclesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Автомобили</h1>
           <p className="text-gray-500 mt-1">Все автомобили в системе</p>
         </div>
-        {(profile as Profile).role !== 'client' && (
+        {result.permissions.can_add_vehicles && (
           <Link href="/vehicles/new">
             <Button className="gap-2">
               <PlusCircle className="h-4 w-4" />

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
+import { getServerPermissions } from '@/lib/supabase/get-permissions'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,44 +27,41 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const [profileResult, { data: vehicle }] = await Promise.all([
+    getServerPermissions(supabase, user.id),
+    supabase.from('vehicles')
+      .select('*, station:stations(name, stage:stages(name))')
+      .eq('id', id)
+      .single(),
+  ])
 
-  const { data: vehicle } = await supabase
-    .from('vehicles')
-    .select('*, station:stations(name, stage:stages(name))')
-    .eq('id', id)
-    .single()
-
+  if (!profileResult || !profileResult.permissions.see_vehicles) redirect('/dashboard')
   if (!vehicle) notFound()
 
-  const { data: history } = await supabase
-    .from('vehicle_history')
-    .select('*, station:stations(name, stage:stages(name)), mover:profiles(full_name, email)')
-    .eq('vehicle_id', id)
-    .order('started_at', { ascending: false })
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 
-  const { data: photos } = await supabase
-    .from('vehicle_photos')
-    .select('*')
-    .eq('vehicle_id', id)
-    .order('uploaded_at', { ascending: false })
+  const [{ data: history }, { data: photos }, { data: stations }, { data: vehicleServices }, { data: allServices }] = await Promise.all([
+    supabase.from('vehicle_history')
+      .select('*, station:stations(name, stage:stages(name)), mover:profiles(full_name, email)')
+      .eq('vehicle_id', id)
+      .order('started_at', { ascending: false }),
+    supabase.from('vehicle_photos')
+      .select('*')
+      .eq('vehicle_id', id)
+      .order('uploaded_at', { ascending: false }),
+    supabase.from('stations')
+      .select('*, stage:stages(name)')
+      .order('order_index'),
+    supabase.from('vehicle_services')
+      .select('*, service:services(id, name, order_index)')
+      .eq('vehicle_id', id)
+      .order('created_at'),
+    supabase.from('services')
+      .select('*')
+      .order('order_index'),
+  ])
 
-  const { data: stations } = await supabase
-    .from('stations')
-    .select('*, stage:stages(name)')
-    .order('order_index')
-
-  const { data: vehicleServices } = await supabase
-    .from('vehicle_services')
-    .select('*, service:services(id, name, order_index)')
-    .eq('vehicle_id', id)
-    .order('created_at')
-
-  const { data: allServices } = await supabase
-    .from('services')
-    .select('*')
-    .order('order_index')
-
+  const perms = profileResult.permissions
   const s = statusLabel[vehicle.status] || statusLabel.active
 
   return (
@@ -100,11 +98,13 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
                 <p className="text-gray-500">Госномер</p>
                 <p className="font-medium">{vehicle.plate}</p>
               </div>
-              <div>
-                <p className="text-gray-500 flex items-center gap-1"><User className="h-3 w-3" />Владелец</p>
-                <p className="font-medium">{vehicle.owner_name}</p>
-              </div>
-              {vehicle.owner_phone && (
+              {perms.see_owner_name && (
+                <div>
+                  <p className="text-gray-500 flex items-center gap-1"><User className="h-3 w-3" />Владелец</p>
+                  <p className="font-medium">{vehicle.owner_name}</p>
+                </div>
+              )}
+              {perms.see_owner_phone && vehicle.owner_phone && (
                 <div>
                   <p className="text-gray-500 flex items-center gap-1"><Phone className="h-3 w-3" />Телефон</p>
                   <p className="font-medium">{vehicle.owner_phone}</p>
@@ -123,13 +123,15 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
                 <p className="font-medium">{new Date(vehicle.created_at).toLocaleDateString('ru-RU')}</p>
               </div>
             </div>
-            <div className="mt-3">
-              <DueDateEditor
-                vehicleId={vehicle.id}
-                dueDate={vehicle.due_date ?? null}
-                canEdit={profile?.role === 'admin' || profile?.role === 'manager'}
-              />
-            </div>
+            {perms.see_due_date && (
+              <div className="mt-3">
+                <DueDateEditor
+                  vehicleId={vehicle.id}
+                  dueDate={vehicle.due_date ?? null}
+                  canEdit={perms.can_move_vehicles}
+                />
+              </div>
+            )}
             {vehicle.notes && (
               <>
                 <Separator />
@@ -143,7 +145,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
         </Card>
 
         {/* Actions (move, complete, cancel) */}
-        {(profile?.role === 'admin' || profile?.role === 'manager') && (
+        {perms.can_move_vehicles && (
           <VehicleActions
             vehicle={vehicle}
             stations={stations || []}

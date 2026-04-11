@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getServerPermissions } from '@/lib/supabase/get-permissions'
 import { IdleReport } from '@/components/idle-report'
 
 export const dynamic = 'force-dynamic'
@@ -9,26 +10,24 @@ export default async function IdlePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase
-    .from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'manager')) {
-    redirect('/dashboard')
-  }
-
-  const { data: employees } = await supabase
-    .from('profiles')
-    .select('id, full_name, email, role')
-    .in('role', ['admin', 'manager', 'master'])
-    .order('full_name')
+  const result = await getServerPermissions(supabase, user.id)
+  if (!result || !result.permissions.see_idle) redirect('/dashboard')
 
   const since = new Date()
   since.setDate(since.getDate() - 30)
 
-  const { data: sessions } = await supabase
-    .from('idle_sessions')
-    .select('id, user_id, started_at, ended_at')
-    .gte('started_at', since.toISOString())
-    .order('started_at', { ascending: false })
+  const [{ data: employees }, { data: sessions }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('id, full_name, email, role')
+      .in('role', ['admin', 'manager', 'master'])
+      .order('full_name'),
+    supabase
+      .from('idle_sessions')
+      .select('id, user_id, started_at, ended_at')
+      .gte('started_at', since.toISOString())
+      .order('started_at', { ascending: false }),
+  ])
 
   return (
     <div className="max-w-4xl">

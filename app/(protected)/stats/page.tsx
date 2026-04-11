@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getServerPermissions } from '@/lib/supabase/get-permissions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Car, CheckCircle, Clock, TrendingUp, AlertCircle } from 'lucide-react'
@@ -26,26 +27,34 @@ export default async function StatsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'manager')) redirect('/dashboard')
+  const result = await getServerPermissions(supabase, user.id)
+  if (!result || !result.permissions.see_stats) redirect('/dashboard')
 
-  // General stats
-  const { count: activeCount } = await supabase
-    .from('vehicles').select('*', { count: 'exact', head: true }).eq('status', 'active')
-
-  const { count: completedCount } = await supabase
-    .from('vehicles').select('*', { count: 'exact', head: true }).eq('status', 'completed')
-
-  const { count: monthCount } = await supabase
-    .from('vehicles').select('*', { count: 'exact', head: true })
-    .eq('status', 'completed')
-    .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
-
-  // Average time per stage from history
-  const { data: historyData } = await supabase
-    .from('vehicle_history')
-    .select('station_id, started_at, ended_at, station:stations(name, stage:stages(name))')
-    .not('ended_at', 'is', null)
+  // Параллельные запросы для скорости
+  const [
+    { count: activeCount },
+    { count: completedCount },
+    { count: monthCount },
+    { data: historyData },
+    { data: activeVehicles },
+    { data: currentHistory },
+  ] = await Promise.all([
+    supabase.from('vehicles').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase.from('vehicles').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
+    supabase.from('vehicles').select('*', { count: 'exact', head: true })
+      .eq('status', 'completed')
+      .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
+    supabase.from('vehicle_history')
+      .select('station_id, started_at, ended_at, station:stations(name, stage:stages(name))')
+      .not('ended_at', 'is', null),
+    supabase.from('vehicles')
+      .select('id, plate, make, model, current_station_id, station:stations(name, stage:stages(name))')
+      .eq('status', 'active')
+      .order('created_at'),
+    supabase.from('vehicle_history')
+      .select('vehicle_id, started_at')
+      .is('ended_at', null),
+  ])
 
   // Calculate avg time per stage
   const stageStats: Record<string, { name: string; stageName: string; totalHours: number; count: number }> = {}
@@ -66,18 +75,6 @@ export default async function StatsPage() {
   const stageList = Object.values(stageStats)
     .map(s => ({ ...s, avgHours: s.totalHours / s.count }))
     .sort((a, b) => b.avgHours - a.avgHours)
-
-  // Currently active vehicles with time on current station
-  const { data: activeVehicles } = await supabase
-    .from('vehicles')
-    .select('id, plate, make, model, current_station_id, station:stations(name, stage:stages(name))')
-    .eq('status', 'active')
-    .order('created_at')
-
-  const { data: currentHistory } = await supabase
-    .from('vehicle_history')
-    .select('vehicle_id, started_at')
-    .is('ended_at', null)
 
   const currentHistoryMap = new Map(currentHistory?.map(h => [h.vehicle_id, h.started_at]))
 
