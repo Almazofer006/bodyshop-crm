@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   )
 
   // Определяем URL для редиректа после подтверждения приглашения
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin
+  const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://avaloncrm.ru'
 
   const { error } = await adminSupabase.auth.admin.inviteUserByEmail(email, {
     data: { full_name: full_name || '', role: role || 'master' },
