@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Нельзя удалить самого себя' }, { status: 400 })
   }
 
-  // Создаём admin-клиент с service role key
+  // Создаём admin-клиент с service role key (реальный Supabase URL, не прокси)
   const adminSupabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_URL || 'https://tdsexwuyjpcxhumnxxpi.supabase.co',
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )

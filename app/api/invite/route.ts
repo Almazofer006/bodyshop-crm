@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
   const { email, full_name, role } = await request.json()
   if (!email) return NextResponse.json({ error: 'Email обязателен' }, { status: 400 })
 
-  // Создаём admin-клиент с service role key
+  // Создаём admin-клиент с service role key (используем реальный Supabase URL, не прокси)
   const adminSupabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_URL || 'https://tdsexwuyjpcxhumnxxpi.supabase.co',
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
