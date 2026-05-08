@@ -26,6 +26,11 @@ export async function POST(request: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
+  // Обнуляем ссылки на пользователя в связанных таблицах
+  await adminSupabase.from('vehicles').update({ created_by: null }).eq('created_by', userId)
+  await adminSupabase.from('vehicle_history').update({ moved_by: null }).eq('moved_by', userId)
+  await adminSupabase.from('vehicle_photos').update({ uploaded_by: null }).eq('uploaded_by', userId)
+
   // Удаляем профиль из таблицы profiles
   await adminSupabase.from('profiles').delete().eq('id', userId)
 
