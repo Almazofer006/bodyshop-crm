@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -9,12 +9,15 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Upload, X, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function NewVehiclePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [photos, setPhotos] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
+  const photoInputRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     plate: '',
     make: '',
@@ -24,6 +27,21 @@ export default function NewVehiclePage() {
     notes: '',
     due_date: '',
   })
+
+  const handlePhotosSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+    const newFiles = Array.from(files)
+    setPhotos(prev => [...prev, ...newFiles])
+    setPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))])
+    if (photoInputRef.current) photoInputRef.current.value = ''
+  }
+
+  const removePhoto = (index: number) => {
+    URL.revokeObjectURL(previews[index])
+    setPhotos(prev => prev.filter((_, i) => i !== index))
+    setPreviews(prev => prev.filter((_, i) => i !== index))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,6 +87,29 @@ export default function NewVehiclePage() {
         station_id: parkingStation.id,
         moved_by: user.id,
       })
+    }
+
+    // Upload photos
+    if (photos.length > 0) {
+      let uploaded = 0
+      for (const file of photos) {
+        const ext = file.name.split('.').pop()
+        const path = `${vehicle.id}/${Date.now()}-${uploaded}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('vehicle-photos')
+          .upload(path, file)
+        if (uploadError) continue
+        const { data: urlData } = supabase.storage
+          .from('vehicle-photos')
+          .getPublicUrl(path)
+        await supabase.from('vehicle_photos').insert({
+          vehicle_id: vehicle.id,
+          url: urlData.publicUrl,
+          uploaded_by: user.id,
+        })
+        uploaded++
+      }
+      if (uploaded > 0) toast.success(`Загружено фото: ${uploaded}`)
     }
 
     toast.success('Автомобиль добавлен в систему')
@@ -141,8 +182,51 @@ export default function NewVehiclePage() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label>Фото при приёмке</Label>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handlePhotosSelected}
+              />
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Upload className="h-4 w-4" />
+                Выбрать фото
+              </button>
+              {previews.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {previews.map((src, i) => (
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-gray-100">
+                      <img src={src} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(i)}
+                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 hover:bg-black/80"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Сохранение...' : 'Добавить автомобиль'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {photos.length > 0 ? 'Сохранение и загрузка фото...' : 'Сохранение...'}
+                </span>
+              ) : (
+                `Добавить автомобиль${photos.length > 0 ? ` (+ ${photos.length} фото)` : ''}`
+              )}
             </Button>
           </form>
         </CardContent>
