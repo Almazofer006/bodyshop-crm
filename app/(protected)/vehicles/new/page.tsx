@@ -55,7 +55,7 @@ export default function NewVehiclePage() {
     const { data: parkingStation } = await supabase
       .from('stations')
       .select('id')
-      .eq('name', 'Парковка 1')
+      .eq('name', 'Парковка')
       .single()
 
     const { data: vehicle, error } = await supabase
