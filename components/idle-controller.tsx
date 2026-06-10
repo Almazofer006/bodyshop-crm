@@ -180,7 +180,7 @@ export function IdleController({ userId, variant = 'light' }: IdleControllerProp
     <button
       onClick={handleStart}
       disabled={busy}
-      className="flex items-center gap-3 px-8 py-4 rounded-xl text-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 border-2 border-blue-700 transition-colors shadow-lg"
+      className="flex items-center gap-3 px-8 py-4 rounded-xl text-xl font-semibold text-white bg-red-600 hover:bg-red-700 border-2 border-red-700 transition-colors shadow-lg"
     >
       <Timer className="h-6 w-6" />
       {busy ? '...' : 'Простой'}

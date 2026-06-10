@@ -17,6 +17,8 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { IdleController } from '@/components/idle-controller'
 import { usePermissions } from '@/lib/permissions-context'
+import { Plus } from 'lucide-react'
+import Link from 'next/link'
 import type { Stage, Profile, Vehicle, Station } from '@/lib/types'
 
 const STAGE_COLORS: Record<string, string> = {
@@ -183,7 +185,17 @@ export function StationBoard({ stages: initialStages, profile }: StationBoardPro
               <span className="text-xs text-gray-400 hidden sm:block">Перетащите карточку для перемещения авто</span>
             )}
           </div>
-          {perms.see_idle && <IdleController userId={profile.id} variant="light" />}
+          <div className="flex items-center gap-2">
+            {perms.can_add_vehicles && (
+              <Link href="/vehicles/new">
+                <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-600 hover:bg-green-700 border border-green-700 transition-colors shadow">
+                  <Plus className="h-4 w-4" />
+                  Авто
+                </button>
+              </Link>
+            )}
+            {perms.see_idle && <IdleController userId={profile.id} variant="light" />}
+          </div>
         </div>
         <div className="space-y-6">
           {stages.map((stage) => {
